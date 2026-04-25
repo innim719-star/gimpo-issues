@@ -387,10 +387,12 @@ function dPlusCell(v) {
 
 // ── 정렬 상태 관리 ──
 const sortState = {
-  loss: { col: null, dir: 1 },
-  dmg:  { col: null, dir: 1 },
+  loss:   { col: null, dir: 1 },
+  dmg:    { col: null, dir: 1 },
+  cancel: { col: null, dir: 1 },
 };
 const issueData = { loss: [], dmg: [] };
+let cancelDetailData = [];
 
 function sortIssue(key, col, thEl) {
   const s = sortState[key];
@@ -406,6 +408,40 @@ function sortIssue(key, col, thEl) {
     return String(va || '').localeCompare(String(vb || ''), 'ko') * s.dir;
   });
   _renderRows(sorted, key + '-tbody');
+}
+
+function sortCancel(col, thEl) {
+  const s = sortState.cancel;
+  if (s.col === col) s.dir *= -1;
+  else { s.col = col; s.dir = 1; }
+
+  document.querySelectorAll('#cancel-detail-thead th.sortable').forEach(t => t.classList.remove('asc', 'desc'));
+  thEl.classList.add(s.dir === 1 ? 'asc' : 'desc');
+
+  const sorted = [...cancelDetailData].sort((a, b) => {
+    let va = a[col], vb = b[col];
+    if (col === 'D+') { va = Number(va) || -1; vb = Number(vb) || -1; return (va - vb) * s.dir; }
+    return String(va || '').localeCompare(String(vb || ''), 'ko') * s.dir;
+  });
+  _renderCancelRows(sorted);
+}
+
+function _renderCancelRows(rows) {
+  const tbody = document.getElementById('cancel-detail-tbody');
+  if (!tbody) return;
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="10" class="no-data">데이터 없음</td></tr>'; return; }
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td>${r.이슈생성자}</td>
+    <td>${r.구분 === '반장' ? '<span class="badge badge-boss">반장</span>' : r.구분}</td>
+    <td>${r.이슈번호}</td>
+    <td>${dPlusCell(r['D+'])}</td>
+    <td>${r.생성일시 || '-'}</td>
+    <td>${r.완료일시 || '-'}</td>
+    <td>${r.작업유형 || '-'}</td>
+    <td>${r.벤더 || '-'}</td>
+    <td>${r.이슈로케이션 || '-'}</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${r.SKU명||''}">${r.SKU명||'-'}</td>
+  </tr>`).join('');
 }
 
 function renderIssues(rows, key) {
@@ -466,18 +502,7 @@ fetch('data.json?' + Date.now())
     if (!ct.hasReporter) {
       cel.innerHTML = `<div class="notice-box">Reporter 파일 미제공 — 이슈생성자 정보를 보려면 배치 실행 시 Reporter 파일을 함께 선택해주세요.</div>`;
     } else {
-      const detailRows = (ct.details || []).map(r => `<tr>
-        <td>${r.이슈생성자}</td>
-        <td>${r.구분 === '반장' ? '<span class="badge badge-boss">반장</span>' : r.구분}</td>
-        <td>${r.이슈번호}</td>
-        <td>${dPlusCell(r['D+'])}</td>
-        <td>${r.생성일시 || '-'}</td>
-        <td>${r.완료일시 || '-'}</td>
-        <td>${r.작업유형 || '-'}</td>
-        <td>${r.벤더 || '-'}</td>
-        <td>${r.이슈로케이션 || '-'}</td>
-        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${r.SKU명 || ''}">${r.SKU명 || '-'}</td>
-      </tr>`).join('');
+      cancelDetailData = ct.details || [];
       cel.innerHTML = `
         <div class="table-box" style="margin-bottom:16px">
           <div class="table-box-header">
@@ -496,19 +521,25 @@ fetch('data.json?' + Date.now())
         </div>
         <div class="table-box">
           <div class="table-box-header">
-            <div><span class="t-title">이슈취소 상세 내역</span><span class="t-count">생성자별 · 생성일 오름차순</span></div>
+            <div><span class="t-title">이슈취소 상세 내역</span><span class="t-count">${cancelDetailData.length}건</span></div>
             <input class="search-input" type="text" placeholder="🔍 검색..." oninput="filterTable('cancel-detail-tbody', this.value)">
           </div>
           <div style="overflow-x:auto">
             <table>
-              <thead><tr>
-                <th>이슈생성자</th><th>구분</th><th>이슈번호</th><th>D+</th>
-                <th>생성일시</th><th>완료일시</th><th>작업유형</th><th>벤더</th><th>이슈로케이션</th><th>SKU명</th>
+              <thead id="cancel-detail-thead"><tr>
+                <th class="sortable" onclick="sortCancel('이슈생성자',this)">이슈생성자<span class="sort-icon"></span></th>
+                <th>구분</th>
+                <th class="sortable" onclick="sortCancel('이슈번호',this)">이슈번호<span class="sort-icon"></span></th>
+                <th class="sortable" onclick="sortCancel('D+',this)">D+<span class="sort-icon"></span></th>
+                <th class="sortable" onclick="sortCancel('생성일시',this)">생성일시<span class="sort-icon"></span></th>
+                <th class="sortable" onclick="sortCancel('완료일시',this)">완료일시<span class="sort-icon"></span></th>
+                <th>작업유형</th><th>벤더</th><th>이슈로케이션</th><th>SKU명</th>
               </tr></thead>
-              <tbody id="cancel-detail-tbody">${detailRows || '<tr><td colspan="10" class="no-data">데이터 없음</td></tr>'}</tbody>
+              <tbody id="cancel-detail-tbody"></tbody>
             </table>
           </div>
         </div>`;
+      _renderCancelRows(cancelDetailData);
     }
 
     const tl = data.topLoc;
