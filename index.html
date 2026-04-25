@@ -92,6 +92,9 @@
     .summary-item.red .si-value    { color: #ef4444; }
     .summary-item.orange .si-value { color: #f97316; }
     .summary-item.navy .si-value   { color: #1e3a8a; }
+    .summary-item.green .si-value  { color: #059669; }
+    .summary-item.gray  .si-value  { color: #6b7280; }
+    .summary-item .si-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; }
 
     /* ── 처리기간 분석 (현황요약 내) ── */
     .proc-summary-box { background: white; border: 1px solid #e8eaed; border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
@@ -240,6 +243,7 @@
     <div class="nav-tab" onclick="showTab(1)">분실이슈</div>
     <div class="nav-tab" onclick="showTab(2)">파손이슈</div>
     <div class="nav-tab" onclick="showTab(3)">이슈취소 분석</div>
+    <div class="nav-tab" onclick="showTab(4)">작업자 분석</div>
   </div>
 </div>
 
@@ -282,6 +286,35 @@
           </div>
         </div>
       </div>
+      <div class="summary-box" style="grid-column:1/-1">
+        <div class="summary-box-title">분실이슈 해결 현황 (전체 기간)</div>
+        <div class="summary-box-body">
+          <div class="summary-item red">
+            <div class="si-label">이슈생성</div>
+            <div class="si-value" id="res-gen">-</div>
+            <div class="si-sub" id="res-gen-pct"></div>
+          </div>
+          <div class="summary-item orange">
+            <div class="si-label">이슈대기</div>
+            <div class="si-value" id="res-wait">-</div>
+            <div class="si-sub" id="res-wait-pct"></div>
+          </div>
+          <div class="summary-item green">
+            <div class="si-label">이슈해결</div>
+            <div class="si-value" id="res-done">-</div>
+            <div class="si-sub" id="res-done-pct"></div>
+          </div>
+          <div class="summary-item gray">
+            <div class="si-label">이슈취소</div>
+            <div class="si-value" id="res-cancel">-</div>
+            <div class="si-sub" id="res-cancel-pct"></div>
+          </div>
+          <div class="summary-item navy">
+            <div class="si-label">전체합계</div>
+            <div class="si-value" id="res-total">-</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="proc-summary-box">
@@ -301,6 +334,17 @@
         <table>
           <thead><tr><th>순위</th><th>로케이션</th><th>이슈건수</th><th>주요 SKU</th></tr></thead>
           <tbody id="loc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="table-box">
+      <div class="table-box-header">
+        <div><span class="t-title" id="sku-title">반복 분실 SKU TOP 20</span></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>순위</th><th>SKU명</th><th>분실건수</th><th>벤더</th><th>주요로케이션</th></tr></thead>
+          <tbody id="sku-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -355,6 +399,10 @@
     <div id="cancel-content"></div>
   </div>
 
+  <!-- 4: 작업자 분석 -->
+  <div class="section" id="section-4">
+    <div id="worker-content"></div>
+  </div>
 
 </div>
 
@@ -390,9 +438,41 @@ const sortState = {
   loss:   { col: null, dir: 1 },
   dmg:    { col: null, dir: 1 },
   cancel: { col: null, dir: 1 },
+  worker: { col: null, dir: 1 },
 };
 const issueData = { loss: [], dmg: [] };
 let cancelDetailData = [];
+let workerData = [];
+
+function sortWorker(col, thEl) {
+  const s = sortState.worker;
+  if (s.col === col) s.dir *= -1;
+  else { s.col = col; s.dir = 1; }
+  document.querySelectorAll('#worker-thead th.sortable').forEach(t => t.classList.remove('asc', 'desc'));
+  thEl.classList.add(s.dir === 1 ? 'asc' : 'desc');
+  const sorted = [...workerData].sort((a, b) => {
+    let va = a[col], vb = b[col];
+    if (typeof va === 'number') return (va - vb) * s.dir;
+    return String(va || '').localeCompare(String(vb || ''), 'ko') * s.dir;
+  });
+  _renderWorkerRows(sorted);
+}
+
+function _renderWorkerRows(rows) {
+  const tbody = document.getElementById('worker-detail-tbody');
+  if (!tbody) return;
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="8" class="no-data">데이터 없음</td></tr>'; return; }
+  tbody.innerHTML = rows.map((r, i) => `<tr>
+    <td>${i + 1}</td>
+    <td>${r.이슈생성자}</td>
+    <td>${r.구분 === '반장' ? '<span class="badge badge-boss">반장</span>' : r.구분}</td>
+    <td><b>${r.합계}</b></td>
+    <td><span style="color:#ef4444;font-weight:600">${r.이슈생성}</span></td>
+    <td><span style="color:#f97316;font-weight:600">${r.이슈대기}</span></td>
+    <td><span style="color:#059669;font-weight:600">${r.이슈해결}</span></td>
+    <td><span style="color:#6b7280">${r.이슈취소}</span></td>
+  </tr>`).join('');
+}
 
 function sortIssue(key, col, thEl) {
   const s = sortState[key];
@@ -540,6 +620,65 @@ fetch('data.json?' + Date.now())
           </div>
         </div>`;
       _renderCancelRows(cancelDetailData);
+    }
+
+    const res = data.resolution;
+    if (res) {
+      const pct = v => res.total ? Math.round(v / res.total * 100) + '%' : '-';
+      document.getElementById('res-gen').textContent      = res.counts.이슈생성;
+      document.getElementById('res-gen-pct').textContent  = pct(res.counts.이슈생성);
+      document.getElementById('res-wait').textContent     = res.counts.이슈대기;
+      document.getElementById('res-wait-pct').textContent = pct(res.counts.이슈대기);
+      document.getElementById('res-done').textContent     = res.counts.이슈해결;
+      document.getElementById('res-done-pct').textContent = pct(res.counts.이슈해결);
+      document.getElementById('res-cancel').textContent   = res.counts.이슈취소;
+      document.getElementById('res-cancel-pct').textContent = pct(res.counts.이슈취소);
+      document.getElementById('res-total').textContent    = res.total;
+    }
+
+    const ts = data.topSKU;
+    if (ts) {
+      document.getElementById('sku-title').textContent = `반복 분실 SKU TOP 20  (${ts.period})`;
+      document.getElementById('sku-tbody').innerHTML = ts.rows.map(r =>
+        `<tr>
+          <td>${r.순위}</td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis" title="${r.SKU명}">${r.SKU명}</td>
+          <td><b>${r.건수}</b></td>
+          <td>${r.벤더 || '-'}</td>
+          <td>${r.주요로케이션 || '-'}</td>
+        </tr>`
+      ).join('');
+    }
+
+    const ws = data.workerStats;
+    const wel = document.getElementById('worker-content');
+    if (!ws || !ws.hasReporter) {
+      wel.innerHTML = `<div class="notice-box">Reporter 파일 미제공 — 이슈생성자 정보를 보려면 배치 실행 시 Reporter 파일을 함께 선택해주세요.</div>`;
+    } else {
+      workerData = ws.rows || [];
+      wel.innerHTML = `
+        <div class="table-box">
+          <div class="table-box-header">
+            <div><span class="t-title">작업자별 분실이슈 생성 건수</span><span class="t-count">${ws.period} · 총 ${workerData.length}명</span></div>
+            <input class="search-input" type="text" placeholder="&#128269; 검색..." oninput="filterTable('worker-detail-tbody', this.value)">
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead id="worker-thead"><tr>
+                <th>순위</th>
+                <th class="sortable" onclick="sortWorker('이슈생성자',this)">이슈생성자<span class="sort-icon"></span></th>
+                <th>구분</th>
+                <th class="sortable" onclick="sortWorker('합계',this)">합계<span class="sort-icon"></span></th>
+                <th class="sortable" onclick="sortWorker('이슈생성',this)">이슈생성<span class="sort-icon"></span></th>
+                <th class="sortable" onclick="sortWorker('이슈대기',this)">이슈대기<span class="sort-icon"></span></th>
+                <th class="sortable" onclick="sortWorker('이슈해결',this)">이슈해결<span class="sort-icon"></span></th>
+                <th class="sortable" onclick="sortWorker('이슈취소',this)">이슈취소<span class="sort-icon"></span></th>
+              </tr></thead>
+              <tbody id="worker-detail-tbody"></tbody>
+            </table>
+          </div>
+        </div>`;
+      _renderWorkerRows(workerData);
     }
 
     const tl = data.topLoc;
