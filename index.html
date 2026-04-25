@@ -10,73 +10,64 @@
 
     /* ── 상단 헤더 ── */
     .top-bar {
-      background: #1a1f3c;
-      height: 52px;
+      background: #1b2040;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .top-row {
+      height: 48px;
       display: flex;
       align-items: center;
-      padding: 0 20px;
-      gap: 16px;
       justify-content: space-between;
     }
-    .logo-area { display: flex; align-items: center; gap: 12px; }
-    .logo-icon {
-      background: #7c6ff7;
-      border-radius: 8px;
-      width: 36px; height: 36px;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      line-height: 1;
+    .logo-area { display: flex; align-items: baseline; gap: 4px; }
+    .logo-text {
+      color: white;
+      font-size: 22px;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -0.5px;
+      font-family: Arial Black, Arial, sans-serif;
     }
-    .logo-icon .lg1 { color: white; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
-    .logo-icon .lg2 { color: #c9c2ff; font-size: 7px; letter-spacing: 0.5px; margin-top: 1px; }
-    .logo-text { color: white; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
-    .logo-divider { width: 1px; height: 20px; background: #3a3f5c; }
-    .site-title { color: #a0a8cc; font-size: 13px; }
+    .logo-wms {
+      color: #8892b8;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      font-style: normal;
+      margin-left: 2px;
+    }
 
-    .top-right { display: flex; align-items: center; gap: 16px; }
+    .top-right { display: flex; align-items: center; gap: 12px; }
     .chip {
-      background: #2a2f4e;
-      border: 1px solid #3a3f5c;
-      border-radius: 6px;
+      background: #252b4a;
+      border: 1px solid #2e3660;
+      border-radius: 5px;
       padding: 5px 12px;
-      color: #c0c8e8;
+      color: #a0a8cc;
       font-size: 12px;
       display: flex; align-items: center; gap: 6px;
     }
-    .chip .arrow { color: #6b7299; font-size: 10px; }
-    .updated-badge {
-      color: #8890b8;
-      font-size: 12px;
-    }
-    .avatar {
-      width: 30px; height: 30px;
-      background: #7c6ff7;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 12px; font-weight: 700;
-    }
 
-    /* ── 탭 네비 ── */
+    /* ── 탭 네비 (헤더 안에 포함) ── */
     .nav-bar {
-      background: white;
-      border-bottom: 1px solid #e8eaed;
       display: flex;
-      padding: 0 20px;
-      gap: 4px;
+      gap: 0;
+      padding: 0;
     }
     .nav-tab {
-      padding: 14px 18px;
+      padding: 11px 18px;
       font-size: 13px;
-      color: #6b7280;
+      color: #7a84aa;
       cursor: pointer;
       border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
       white-space: nowrap;
       user-select: none;
       transition: color 0.15s;
     }
-    .nav-tab:hover { color: #1a1f3c; }
-    .nav-tab.active { color: #1a1f3c; font-weight: 600; border-bottom-color: #7c6ff7; }
+    .nav-tab:hover { color: #c0c8e8; }
+    .nav-tab.active { color: white; font-weight: 600; border-bottom-color: white; }
 
     /* ── 콘텐츠 ── */
     .content { padding: 24px; max-width: 1400px; margin: 0 auto; }
@@ -217,31 +208,25 @@
 </head>
 <body>
 
-<!-- 상단 헤더 -->
+<!-- 상단 헤더 + 탭 네비 통합 -->
 <div class="top-bar">
-  <div class="logo-area">
-    <div class="logo-icon">
-      <span class="lg1">KMP</span>
-      <span class="lg2">ISSUE</span>
+  <div class="top-row">
+    <div class="logo-area">
+      <span class="logo-text">ARGO</span>
+      <span class="logo-wms">WMS</span>
     </div>
-    <span class="logo-text">KMP ISSUE</span>
-  </div>
-  <div class="top-right">
-    <div class="chip">
-      <span>&#128197;</span>
-      <span id="header-date">로딩 중...</span>
+    <div class="top-right">
+      <div class="chip">&#128197; <span id="header-date">로딩 중...</span></div>
+      <div class="chip">KR_ARGO 김포</div>
     </div>
-    <div class="chip">KR_ARGO 김포</div>
   </div>
-</div>
-
-<!-- 탭 네비 -->
-<div class="nav-bar">
-  <div class="nav-tab active" onclick="showTab(0)">현황요약</div>
-  <div class="nav-tab" onclick="showTab(1)">분실이슈</div>
-  <div class="nav-tab" onclick="showTab(2)">파손이슈</div>
-  <div class="nav-tab" onclick="showTab(3)">처리기간분석</div>
-  <div class="nav-tab" onclick="showTab(4)">이슈취소 분석</div>
+  <div class="nav-bar">
+    <div class="nav-tab active" onclick="showTab(0)">현황요약</div>
+    <div class="nav-tab" onclick="showTab(1)">분실이슈</div>
+    <div class="nav-tab" onclick="showTab(2)">파손이슈</div>
+    <div class="nav-tab" onclick="showTab(3)">처리기간분석</div>
+    <div class="nav-tab" onclick="showTab(4)">이슈취소 분석</div>
+  </div>
 </div>
 
 <div class="content">
