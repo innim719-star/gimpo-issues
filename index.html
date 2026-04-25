@@ -280,7 +280,6 @@
       <div class="proc-summary-body" id="process-summary-body"></div>
     </div>
 
-    <div class="section-title">TOP LOC 20</div>
     <div class="table-box">
       <div class="table-box-header">
         <div><span class="t-title" id="loc-title">TOP LOC 20</span></div>
@@ -396,14 +395,16 @@ fetch('data.json?' + Date.now())
     const ps = data.processStats;
     document.getElementById('process-period').textContent = `${ps.period}  ·  총 ${ps.total}건`;
     const clsMap = { '이슈대기': 'wait', '이슈해결': 'done', '이슈취소': 'cancel' };
-    document.getElementById('process-summary-body').innerHTML = ps.stats.map(s => `
-      <div class="proc-col">
-        <div class="pc-name ${clsMap[s.상태] || ''}">${s.상태}</div>
-        <div class="pc-row"><span class="k">건수</span><span class="v">${s.건수}</span></div>
-        <div class="pc-row"><span class="k">평균 D+</span><span class="v">${s.평균}</span></div>
-        <div class="pc-row"><span class="k">최소 D+</span><span class="v">${s.최소}</span></div>
-        <div class="pc-row"><span class="k">최대 D+</span><span class="v">${s.최대}</span></div>
-      </div>`).join('');
+    document.getElementById('process-summary-body').innerHTML = ps.stats
+      .filter(s => s.상태 !== '이슈생성')
+      .map(s => `
+        <div class="proc-col">
+          <div class="pc-name ${clsMap[s.상태] || ''}">${s.상태}</div>
+          <div class="pc-row"><span class="k">건수</span><span class="v">${s.건수}</span></div>
+          <div class="pc-row"><span class="k">평균 D+</span><span class="v">${s.평균}</span></div>
+          <div class="pc-row"><span class="k">최소 D+</span><span class="v">${s.최소}</span></div>
+          <div class="pc-row"><span class="k">최대 D+</span><span class="v">${s.최대}</span></div>
+        </div>`).join('');
 
     const ct = data.cancelTracking;
     const cel = document.getElementById('cancel-content');
