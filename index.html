@@ -175,6 +175,20 @@
     .badge-cancel{ background: #f3f4f6; color: #6b7280; }
     .badge-boss  { background: #ede9fe; color: #7c3aed; }
 
+    /* ── D+ 위험도 ── */
+    .dp-danger { color: #dc2626; font-weight: 700; }
+    .dp-warn   { color: #ea580c; font-weight: 700; }
+    .dp-caution{ color: #ca8a04; font-weight: 600; }
+    .dp-ok     { color: #374151; }
+
+    /* ── 정렬 헤더 ── */
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { background: #e5e7eb; }
+    th.sortable .sort-icon { margin-left: 4px; color: #9ca3af; font-size: 10px; }
+    th.sortable.asc .sort-icon::after  { content: ' ▲'; color: #7c6ff7; }
+    th.sortable.desc .sort-icon::after { content: ' ▼'; color: #7c6ff7; }
+    th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
+
 
     /* ── 바 차트 ── */
     .bar-list { padding: 16px 20px; }
@@ -301,8 +315,11 @@
       </div>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr>
-            <th>이슈번호</th><th>상태</th><th>D+</th><th>생성일시</th>
+          <thead id="loss-thead"><tr>
+            <th class="sortable" onclick="sortIssue('loss','이슈번호',this)">이슈번호<span class="sort-icon"></span></th>
+            <th class="sortable" onclick="sortIssue('loss','상태',this)">상태<span class="sort-icon"></span></th>
+            <th class="sortable" onclick="sortIssue('loss','D+',this)">D+<span class="sort-icon"></span></th>
+            <th class="sortable" onclick="sortIssue('loss','생성일시',this)">생성일시<span class="sort-icon"></span></th>
             <th>작업유형</th><th>벤더</th><th>이슈로케이션</th><th>SKU명</th><th>이슈수량</th>
           </tr></thead>
           <tbody id="loss-tbody"></tbody>
@@ -320,8 +337,11 @@
       </div>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr>
-            <th>이슈번호</th><th>상태</th><th>D+</th><th>생성일시</th>
+          <thead id="dmg-thead"><tr>
+            <th class="sortable" onclick="sortIssue('dmg','이슈번호',this)">이슈번호<span class="sort-icon"></span></th>
+            <th class="sortable" onclick="sortIssue('dmg','상태',this)">상태<span class="sort-icon"></span></th>
+            <th class="sortable" onclick="sortIssue('dmg','D+',this)">D+<span class="sort-icon"></span></th>
+            <th class="sortable" onclick="sortIssue('dmg','생성일시',this)">생성일시<span class="sort-icon"></span></th>
             <th>작업유형</th><th>벤더</th><th>이슈로케이션</th><th>SKU명</th><th>이슈수량</th>
           </tr></thead>
           <tbody id="dmg-tbody"></tbody>
@@ -356,13 +376,50 @@ function badge(s) {
   return `<span class="badge ${m[s] || ''}">${s}</span>`;
 }
 
-function renderIssues(rows, tbodyId) {
+function dPlusCell(v) {
+  if (v == null || v === '') return '<span class="dp-ok">-</span>';
+  const n = Number(v);
+  if (n >= 14) return `<span class="dp-danger">${n}</span>`;
+  if (n >= 7)  return `<span class="dp-warn">${n}</span>`;
+  if (n >= 3)  return `<span class="dp-caution">${n}</span>`;
+  return `<span class="dp-ok">${n}</span>`;
+}
+
+// ── 정렬 상태 관리 ──
+const sortState = {
+  loss: { col: null, dir: 1 },
+  dmg:  { col: null, dir: 1 },
+};
+const issueData = { loss: [], dmg: [] };
+
+function sortIssue(key, col, thEl) {
+  const s = sortState[key];
+  if (s.col === col) s.dir *= -1;
+  else { s.col = col; s.dir = 1; }
+
+  document.querySelectorAll(`#${key}-thead th.sortable`).forEach(t => t.classList.remove('asc', 'desc'));
+  thEl.classList.add(s.dir === 1 ? 'asc' : 'desc');
+
+  const sorted = [...issueData[key]].sort((a, b) => {
+    let va = a[col], vb = b[col];
+    if (col === 'D+') { va = va ?? -1; vb = vb ?? -1; return (va - vb) * s.dir; }
+    return String(va || '').localeCompare(String(vb || ''), 'ko') * s.dir;
+  });
+  _renderRows(sorted, key + '-tbody');
+}
+
+function renderIssues(rows, key) {
+  issueData[key] = rows;
+  _renderRows(rows, key + '-tbody');
+}
+
+function _renderRows(rows, tbodyId) {
   const tbody = document.getElementById(tbodyId);
   if (!rows.length) { tbody.innerHTML = '<tr><td colspan="9" class="no-data">데이터 없음</td></tr>'; return; }
   tbody.innerHTML = rows.map(r => `<tr>
     <td>${r.이슈번호 || ''}</td>
     <td>${badge(r.상태)}</td>
-    <td><b>${r['D+'] != null ? r['D+'] : '-'}</b></td>
+    <td>${dPlusCell(r['D+'])}</td>
     <td>${r.생성일시 || '-'}</td>
     <td>${r.작업유형 || '-'}</td>
     <td>${r.벤더 || '-'}</td>
@@ -385,10 +442,10 @@ fetch('data.json?' + Date.now())
     document.getElementById('s-dmg-total').textContent  = data.summary.damage.합계;
 
     document.getElementById('loss-count').textContent = data.lossIssues.length + '건';
-    renderIssues(data.lossIssues, 'loss-tbody');
+    renderIssues(data.lossIssues, 'loss');
 
     document.getElementById('dmg-count').textContent = data.damageIssues.length + '건';
-    renderIssues(data.damageIssues, 'dmg-tbody');
+    renderIssues(data.damageIssues, 'dmg');
 
     const ps = data.processStats;
     document.getElementById('process-period').textContent = `${ps.period}  ·  총 ${ps.total}건`;
@@ -409,8 +466,20 @@ fetch('data.json?' + Date.now())
     if (!ct.hasReporter) {
       cel.innerHTML = `<div class="notice-box">Reporter 파일 미제공 — 이슈생성자 정보를 보려면 배치 실행 시 Reporter 파일을 함께 선택해주세요.</div>`;
     } else {
+      const detailRows = (ct.details || []).map(r => `<tr>
+        <td>${r.이슈생성자}</td>
+        <td>${r.구분 === '반장' ? '<span class="badge badge-boss">반장</span>' : r.구분}</td>
+        <td>${r.이슈번호}</td>
+        <td>${dPlusCell(r['D+'])}</td>
+        <td>${r.생성일시 || '-'}</td>
+        <td>${r.완료일시 || '-'}</td>
+        <td>${r.작업유형 || '-'}</td>
+        <td>${r.벤더 || '-'}</td>
+        <td>${r.이슈로케이션 || '-'}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${r.SKU명 || ''}">${r.SKU명 || '-'}</td>
+      </tr>`).join('');
       cel.innerHTML = `
-        <div class="table-box">
+        <div class="table-box" style="margin-bottom:16px">
           <div class="table-box-header">
             <div><span class="t-title">이슈생성자 취소건 집계</span><span class="t-count">${ct.period} · 총 ${ct.total}건</span></div>
           </div>
@@ -422,6 +491,21 @@ fetch('data.json?' + Date.now())
                 <td>${r.구분 === '반장' ? '<span class="badge badge-boss">반장</span>' : r.구분}</td>
                 <td><b>${r.취소건수}</b></td>
               </tr>`).join('')}</tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-box">
+          <div class="table-box-header">
+            <div><span class="t-title">취소 이슈 상세 내역</span><span class="t-count">생성자별 · 생성일 오름차순</span></div>
+            <input class="search-input" type="text" placeholder="🔍 검색..." oninput="filterTable('cancel-detail-tbody', this.value)">
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr>
+                <th>이슈생성자</th><th>구분</th><th>이슈번호</th><th>D+</th>
+                <th>생성일시</th><th>완료일시</th><th>작업유형</th><th>벤더</th><th>이슈로케이션</th><th>SKU명</th>
+              </tr></thead>
+              <tbody id="cancel-detail-tbody">${detailRows || '<tr><td colspan="10" class="no-data">데이터 없음</td></tr>'}</tbody>
             </table>
           </div>
         </div>`;
