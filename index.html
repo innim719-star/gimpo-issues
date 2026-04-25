@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARGO WMS | 김포 이슈 현황판</title>
+  <title>KMP ISSUE | 김포 이슈 현황판</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; background: #f5f6fa; color: #1a1a2e; font-size: 14px; }
@@ -221,20 +221,17 @@
 <div class="top-bar">
   <div class="logo-area">
     <div class="logo-icon">
-      <span class="lg1">ARGO</span>
-      <span class="lg2">WMS</span>
+      <span class="lg1">KMP</span>
+      <span class="lg2">ISSUE</span>
     </div>
-    <span class="logo-text">ARGO WMS</span>
-    <div class="logo-divider"></div>
-    <span class="site-title">김포 이슈 현황판</span>
+    <span class="logo-text">KMP ISSUE</span>
   </div>
   <div class="top-right">
     <div class="chip">
       <span>&#128197;</span>
       <span id="header-date">로딩 중...</span>
     </div>
-    <div class="chip">KR_ARGO 김포 <span class="arrow">&#9660;</span></div>
-    <div class="avatar">D</div>
+    <div class="chip">KR_ARGO 김포</div>
   </div>
 </div>
 
@@ -244,8 +241,7 @@
   <div class="nav-tab" onclick="showTab(1)">분실이슈</div>
   <div class="nav-tab" onclick="showTab(2)">파손이슈</div>
   <div class="nav-tab" onclick="showTab(3)">처리기간분석</div>
-  <div class="nav-tab" onclick="showTab(4)">이슈생성자추적</div>
-  <div class="nav-tab" onclick="showTab(5)">TOP LOC 20</div>
+  <div class="nav-tab" onclick="showTab(4)">이슈취소 분석</div>
 </div>
 
 <div class="content">
@@ -280,6 +276,20 @@
       <div class="stat-card accent">
         <div class="s-label">합계</div>
         <div class="s-value" id="s-dmg-total">-</div>
+      </div>
+    </div>
+
+    <div class="section-title">TOP LOC 20</div>
+    <div class="table-box">
+      <div class="table-box-header">
+        <div><span class="t-title" id="loc-title">TOP LOC 20</span></div>
+      </div>
+      <div class="bar-list" id="loc-bars"></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>순위</th><th>로케이션</th><th>이슈건수</th><th>주요 SKU</th></tr></thead>
+          <tbody id="loc-tbody"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -343,21 +353,6 @@
     <div id="cancel-content"></div>
   </div>
 
-  <!-- 5: TOP LOC -->
-  <div class="section" id="section-5">
-    <div class="table-box">
-      <div class="table-box-header">
-        <div><span class="t-title" id="loc-title">TOP LOC 20</span></div>
-      </div>
-      <div class="bar-list" id="loc-bars"></div>
-      <div style="overflow-x:auto">
-        <table>
-          <thead><tr><th>순위</th><th>로케이션</th><th>이슈건수</th><th>주요 SKU</th></tr></thead>
-          <tbody id="loc-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 
 </div>
 
