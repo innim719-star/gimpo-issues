@@ -76,23 +76,43 @@
 
     .section-title { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 16px; }
 
-    /* ── 현황 카드 ── */
-    .cards-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
-    .stat-card {
-      background: white;
-      border: 1px solid #e8eaed;
-      border-radius: 8px;
-      padding: 18px 22px;
-      flex: 1;
-      min-width: 130px;
+    /* ── 현황 요약 박스 ── */
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .summary-box { background: white; border: 1px solid #e8eaed; border-radius: 8px; overflow: hidden; }
+    .summary-box-title {
+      padding: 10px 16px; font-size: 12px; font-weight: 600;
+      background: #f9fafb; border-bottom: 1px solid #e8eaed; color: #4b5563;
+      text-transform: uppercase; letter-spacing: 0.4px;
     }
-    .stat-card .s-label { font-size: 12px; color: #9ca3af; margin-bottom: 10px; }
-    .stat-card .s-value { font-size: 28px; font-weight: 700; color: #1a1a2e; }
-    .stat-card.accent .s-value { color: #7c6ff7; }
-    .stat-card.red .s-value { color: #ef4444; }
-    .stat-card.orange .s-value { color: #f97316; }
-    .stat-card.blue .s-value { color: #3b82f6; }
-    .stat-card.green .s-value { color: #10b981; }
+    .summary-box-body { display: flex; }
+    .summary-item { flex: 1; padding: 14px 16px; border-right: 1px solid #f0f0f0; }
+    .summary-item:last-child { border-right: none; }
+    .summary-item .si-label { font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
+    .summary-item .si-value { font-size: 24px; font-weight: 700; color: #1a1a2e; }
+    .summary-item.red .si-value  { color: #ef4444; }
+    .summary-item.orange .si-value { color: #f97316; }
+    .summary-item.blue .si-value { color: #3b82f6; }
+    .summary-item.green .si-value { color: #10b981; }
+    .summary-item.purple .si-value { color: #7c6ff7; }
+
+    /* ── 처리기간 분석 (현황요약 내) ── */
+    .proc-summary-box { background: white; border: 1px solid #e8eaed; border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+    .proc-summary-header {
+      padding: 10px 16px; font-size: 12px; font-weight: 600;
+      background: #f9fafb; border-bottom: 1px solid #e8eaed; color: #4b5563;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .proc-summary-header .period { font-size: 11px; color: #9ca3af; font-weight: 400; }
+    .proc-summary-body { display: grid; grid-template-columns: repeat(3, 1fr); }
+    .proc-col { padding: 14px 18px; border-right: 1px solid #f0f0f0; }
+    .proc-col:last-child { border-right: none; }
+    .proc-col .pc-name { font-size: 12px; font-weight: 600; margin-bottom: 10px; }
+    .pc-name.wait   { color: #ea580c; }
+    .pc-name.done   { color: #059669; }
+    .pc-name.cancel { color: #6b7280; }
+    .proc-col .pc-row { display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0; }
+    .proc-col .pc-row .k { color: #9ca3af; }
+    .proc-col .pc-row .v { font-weight: 600; color: #1a1a2e; }
 
     /* ── 테이블 ── */
     .table-box {
@@ -157,23 +177,6 @@
     .badge-cancel{ background: #f3f4f6; color: #6b7280; }
     .badge-boss  { background: #ede9fe; color: #7c3aed; }
 
-    /* ── 처리기간 카드 ── */
-    .proc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
-    .proc-card {
-      background: white;
-      border: 1px solid #e8eaed;
-      border-radius: 8px;
-      padding: 16px 18px;
-    }
-    .proc-card .pc-title {
-      font-size: 12px; font-weight: 600;
-      color: #6b7280; margin-bottom: 10px;
-      padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;
-      text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .pc-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 13px; }
-    .pc-row .k { color: #9ca3af; }
-    .pc-row .v { font-weight: 600; color: #1a1a2e; }
 
     /* ── 바 차트 ── */
     .bar-list { padding: 16px 20px; }
@@ -224,8 +227,7 @@
     <div class="nav-tab active" onclick="showTab(0)">현황요약</div>
     <div class="nav-tab" onclick="showTab(1)">분실이슈</div>
     <div class="nav-tab" onclick="showTab(2)">파손이슈</div>
-    <div class="nav-tab" onclick="showTab(3)">처리기간분석</div>
-    <div class="nav-tab" onclick="showTab(4)">이슈취소 분석</div>
+    <div class="nav-tab" onclick="showTab(3)">이슈취소 분석</div>
   </div>
 </div>
 
@@ -233,35 +235,49 @@
 
   <!-- 0: 현황요약 -->
   <div class="section active" id="section-0">
-    <div class="section-title">분실이슈 현황</div>
-    <div class="cards-row">
-      <div class="stat-card red">
-        <div class="s-label">이슈생성</div>
-        <div class="s-value" id="s-loss-gen">-</div>
+    <div class="summary-grid">
+      <div class="summary-box">
+        <div class="summary-box-title">분실이슈 현황</div>
+        <div class="summary-box-body">
+          <div class="summary-item red">
+            <div class="si-label">이슈생성</div>
+            <div class="si-value" id="s-loss-gen">-</div>
+          </div>
+          <div class="summary-item orange">
+            <div class="si-label">이슈대기</div>
+            <div class="si-value" id="s-loss-wait">-</div>
+          </div>
+          <div class="summary-item purple">
+            <div class="si-label">합계</div>
+            <div class="si-value" id="s-loss-total">-</div>
+          </div>
+        </div>
       </div>
-      <div class="stat-card orange">
-        <div class="s-label">이슈대기</div>
-        <div class="s-value" id="s-loss-wait">-</div>
-      </div>
-      <div class="stat-card accent">
-        <div class="s-label">합계</div>
-        <div class="s-value" id="s-loss-total">-</div>
+      <div class="summary-box">
+        <div class="summary-box-title">파손이슈 현황</div>
+        <div class="summary-box-body">
+          <div class="summary-item blue">
+            <div class="si-label">이슈생성</div>
+            <div class="si-value" id="s-dmg-gen">-</div>
+          </div>
+          <div class="summary-item green">
+            <div class="si-label">이슈대기</div>
+            <div class="si-value" id="s-dmg-wait">-</div>
+          </div>
+          <div class="summary-item purple">
+            <div class="si-label">합계</div>
+            <div class="si-value" id="s-dmg-total">-</div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="section-title">파손이슈 현황</div>
-    <div class="cards-row">
-      <div class="stat-card blue">
-        <div class="s-label">이슈생성</div>
-        <div class="s-value" id="s-dmg-gen">-</div>
+
+    <div class="proc-summary-box">
+      <div class="proc-summary-header">
+        <span>처리기간 분석</span>
+        <span class="period" id="process-period">-</span>
       </div>
-      <div class="stat-card green">
-        <div class="s-label">이슈대기</div>
-        <div class="s-value" id="s-dmg-wait">-</div>
-      </div>
-      <div class="stat-card accent">
-        <div class="s-label">합계</div>
-        <div class="s-value" id="s-dmg-total">-</div>
-      </div>
+      <div class="proc-summary-body" id="process-summary-body"></div>
     </div>
 
     <div class="section-title">TOP LOC 20</div>
@@ -317,24 +333,8 @@
     </div>
   </div>
 
-  <!-- 3: 처리기간분석 -->
+  <!-- 3: 이슈취소 분석 -->
   <div class="section" id="section-3">
-    <div class="proc-grid" id="process-stat-cards"></div>
-    <div class="table-box">
-      <div class="table-box-header">
-        <div><span class="t-title" id="process-title">처리기간 분석</span></div>
-      </div>
-      <div style="overflow-x:auto">
-        <table>
-          <thead><tr><th>상태</th><th>건수</th><th>평균 D+</th><th>최소 D+</th><th>최대 D+</th></tr></thead>
-          <tbody id="process-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4: 이슈생성자추적 -->
-  <div class="section" id="section-4">
     <div id="cancel-content"></div>
   </div>
 
@@ -394,18 +394,16 @@ fetch('data.json?' + Date.now())
     renderIssues(data.damageIssues, 'dmg-tbody');
 
     const ps = data.processStats;
-    document.getElementById('process-title').textContent = `처리기간 분석  (${ps.period})  총 ${ps.total}건`;
-    document.getElementById('process-stat-cards').innerHTML = ps.stats.map(s => `
-      <div class="proc-card">
-        <div class="pc-title">${s.상태}</div>
+    document.getElementById('process-period').textContent = `${ps.period}  ·  총 ${ps.total}건`;
+    const clsMap = { '이슈대기': 'wait', '이슈해결': 'done', '이슈취소': 'cancel' };
+    document.getElementById('process-summary-body').innerHTML = ps.stats.map(s => `
+      <div class="proc-col">
+        <div class="pc-name ${clsMap[s.상태] || ''}">${s.상태}</div>
         <div class="pc-row"><span class="k">건수</span><span class="v">${s.건수}</span></div>
         <div class="pc-row"><span class="k">평균 D+</span><span class="v">${s.평균}</span></div>
         <div class="pc-row"><span class="k">최소 D+</span><span class="v">${s.최소}</span></div>
         <div class="pc-row"><span class="k">최대 D+</span><span class="v">${s.최대}</span></div>
       </div>`).join('');
-    document.getElementById('process-tbody').innerHTML = ps.stats.map(s =>
-      `<tr><td>${badge(s.상태)}</td><td>${s.건수}</td><td>${s.평균}</td><td>${s.최소}</td><td>${s.최대}</td></tr>`
-    ).join('') + `<tr><td style="font-weight:600">합계</td><td style="font-weight:600">${ps.total}</td><td colspan="3"></td></tr>`;
 
     const ct = data.cancelTracking;
     const cel = document.getElementById('cancel-content');
