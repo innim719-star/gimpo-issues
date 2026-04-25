@@ -682,7 +682,7 @@ fetch('data.json?' + Date.now())
     }
 
     const tl = data.topLoc;
-    document.getElementById('loc-title').textContent = `TOP LOC 20  (${tl.period})  대상 ${tl.total}건`;
+    document.getElementById('loc-title').textContent = `ISSUE LOC TOP 20  (${tl.period})  대상 ${tl.total}건`;
     const max = tl.rows.length ? tl.rows[0].건수 : 1;
     document.getElementById('loc-bars').innerHTML = tl.rows.map(r => `
       <div class="bar-item">
