@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>김포 이슈 현황판</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Malgun Gothic', sans-serif; background: #f5f7fa; color: #333; }
+    header { background: #1a3c5e; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    header h1 { font-size: 20px; }
+    header .meta { font-size: 13px; opacity: 0.85; text-align: right; }
+
+    .tabs { display: flex; background: #2c5282; overflow-x: auto; }
+    .tab { padding: 12px 20px; color: #b0c4de; cursor: pointer; white-space: nowrap; font-size: 14px; border-bottom: 3px solid transparent; user-select: none; }
+    .tab.active { color: white; border-bottom-color: #48bb78; }
+    .tab:hover { color: white; }
+
+    .content { padding: 20px; max-width: 1400px; margin: 0 auto; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .cards { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+    .card { background: white; border-radius: 8px; padding: 18px 22px; flex: 1; min-width: 140px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .card .label { font-size: 12px; color: #718096; margin-bottom: 6px; }
+    .card .value { font-size: 30px; font-weight: bold; }
+    .card.red .value { color: #e53e3e; }
+    .card.orange .value { color: #dd6b20; }
+    .card.blue .value { color: #3182ce; }
+    .card.green .value { color: #38a169; }
+    .card.gray .value { color: #4a5568; }
+
+    .table-wrap { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .table-header { padding: 14px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .table-header h2 { font-size: 15px; font-weight: 600; }
+    .table-header input { border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 12px; font-size: 13px; outline: none; }
+    .table-header input:focus { border-color: #3182ce; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #edf2f7; padding: 10px 12px; text-align: left; font-weight: 600; white-space: nowrap; color: #4a5568; }
+    td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f7fafc; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .badge-gen { background: #fed7d7; color: #c53030; }
+    .badge-wait { background: #feebc8; color: #c05621; }
+    .badge-done { background: #c6f6d5; color: #276749; }
+    .badge-cancel { background: #e2e8f0; color: #4a5568; }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: white; border-radius: 8px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .stat-card .stat-title { font-size: 13px; font-weight: 600; color: #2d3748; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+    .stat-row .key { color: #718096; }
+    .stat-row .val { font-weight: 600; color: #2d3748; }
+
+    .bar-section { padding: 20px; }
+    .bar-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; }
+    .bar-item .loc { width: 130px; text-align: right; color: #4a5568; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+    .bar-item .bar { height: 20px; background: #3182ce; border-radius: 3px; min-width: 2px; }
+    .bar-item .cnt { color: #2d3748; font-weight: 600; min-width: 40px; }
+
+    .no-data { padding: 40px; text-align: center; color: #a0aec0; font-size: 14px; }
+    .notice { background: #ebf8ff; border-left: 4px solid #3182ce; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #2c5282; margin-bottom: 16px; }
+
+    @media (max-width: 600px) {
+      .cards { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>&#127981; 김포 이슈 현황판</h1>
+  <div class="meta" id="header-meta">로딩 중...</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab(0)">&#128202; 현황요약</div>
+  <div class="tab" onclick="showTab(1)">&#128230; 분실이슈</div>
+  <div class="tab" onclick="showTab(2)">&#128308; 파손이슈</div>
+  <div class="tab" onclick="showTab(3)">&#9201; 처리기간분석</div>
+  <div class="tab" onclick="showTab(4)">&#128100; 이슈생성자추적</div>
+  <div class="tab" onclick="showTab(5)">&#128205; TOP LOC 20</div>
+</div>
+
+<div class="content">
+
+  <!-- 0: 현황요약 -->
+  <div class="section active" id="section-0">
+    <div class="cards">
+      <div class="card red">
+        <div class="label">분실 — 이슈생성</div>
+        <div class="value" id="s-loss-gen">-</div>
+      </div>
+      <div class="card orange">
+        <div class="label">분실 — 이슈대기</div>
+        <div class="value" id="s-loss-wait">-</div>
+      </div>
+      <div class="card gray">
+        <div class="label">분실이슈 합계</div>
+        <div class="value" id="s-loss-total">-</div>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card blue">
+        <div class="label">파손 — 이슈생성</div>
+        <div class="value" id="s-dmg-gen">-</div>
+      </div>
+      <div class="card green">
+        <div class="label">파손 — 이슈대기</div>
+        <div class="value" id="s-dmg-wait">-</div>
+      </div>
+      <div class="card gray">
+        <div class="label">파손이슈 합계</div>
+        <div class="value" id="s-dmg-total">-</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1: 분실이슈 -->
+  <div class="section" id="section-1">
+    <div class="table-wrap">
+      <div class="table-header">
+        <h2 id="loss-title">분실이슈</h2>
+        <input type="text" placeholder="검색..." oninput="filterTable('loss-tbody', this.value)">
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>이슈번호</th><th>상태</th><th>D+</th><th>생성일시</th>
+            <th>작업유형</th><th>벤더</th><th>이슈로케이션</th><th>SKU명</th><th>이슈수량</th>
+          </tr></thead>
+          <tbody id="loss-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2: 파손이슈 -->
+  <div class="section" id="section-2">
+    <div class="table-wrap">
+      <div class="table-header">
+        <h2 id="dmg-title">파손이슈</h2>
+        <input type="text" placeholder="검색..." oninput="filterTable('dmg-tbody', this.value)">
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>이슈번호</th><th>상태</th><th>D+</th><th>생성일시</th>
+            <th>작업유형</th><th>벤더</th><th>이슈로케이션</th><th>SKU명</th><th>이슈수량</th>
+          </tr></thead>
+          <tbody id="dmg-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3: 처리기간분석 -->
+  <div class="section" id="section-3">
+    <div class="stat-grid" id="process-stat-cards"></div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <h2 id="process-title">처리기간 분석 상세</h2>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>상태</th><th>건수</th><th>평균 D+</th><th>최소 D+</th><th>최대 D+</th></tr></thead>
+          <tbody id="process-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4: 이슈생성자추적 -->
+  <div class="section" id="section-4">
+    <div id="cancel-content"></div>
+  </div>
+
+  <!-- 5: TOP LOC -->
+  <div class="section" id="section-5">
+    <div class="table-wrap">
+      <div class="table-header">
+        <h2 id="loc-title">TOP LOC 20</h2>
+      </div>
+      <div class="bar-section" id="loc-bars"></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>순위</th><th>로케이션</th><th>이슈건수</th><th>주요 SKU</th></tr></thead>
+          <tbody id="loc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showTab(idx) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === idx));
+}
+
+function filterTable(tbodyId, q) {
+  const lq = q.toLowerCase();
+  document.querySelectorAll('#' + tbodyId + ' tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(lq) ? '' : 'none';
+  });
+}
+
+function statusBadge(s) {
+  const map = { '이슈생성': 'badge-gen', '이슈대기': 'badge-wait', '이슈해결': 'badge-done', '이슈취소': 'badge-cancel' };
+  return `<span class="badge ${map[s] || ''}">${s}</span>`;
+}
+
+function renderIssueRows(rows, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="no-data">데이터 없음</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td>${r.이슈번호 || ''}</td>
+    <td>${statusBadge(r.상태)}</td>
+    <td>${r['D+'] != null ? r['D+'] : '-'}</td>
+    <td>${r.생성일시 || '-'}</td>
+    <td>${r.작업유형 || '-'}</td>
+    <td>${r.벤더 || '-'}</td>
+    <td>${r.이슈로케이션 || '-'}</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${r.SKU명 || '-'}</td>
+    <td>${r.이슈수량 != null ? r.이슈수량 : '-'}</td>
+  </tr>`).join('');
+}
+
+fetch('data.json?' + Date.now())
+  .then(r => {
+    if (!r.ok) throw new Error('data.json 없음');
+    return r.json();
+  })
+  .then(data => {
+    document.getElementById('header-meta').textContent = '기준일: ' + data.updated;
+
+    // 현황요약
+    document.getElementById('s-loss-gen').textContent   = data.summary.loss.이슈생성;
+    document.getElementById('s-loss-wait').textContent  = data.summary.loss.이슈대기;
+    document.getElementById('s-loss-total').textContent = data.summary.loss.합계;
+    document.getElementById('s-dmg-gen').textContent    = data.summary.damage.이슈생성;
+    document.getElementById('s-dmg-wait').textContent   = data.summary.damage.이슈대기;
+    document.getElementById('s-dmg-total').textContent  = data.summary.damage.합계;
+
+    // 분실이슈
+    document.getElementById('loss-title').textContent = `분실이슈 (이슈생성+대기) — ${data.lossIssues.length}건`;
+    renderIssueRows(data.lossIssues, 'loss-tbody');
+
+    // 파손이슈
+    document.getElementById('dmg-title').textContent = `파손이슈 (이슈생성+대기) — ${data.damageIssues.length}건`;
+    renderIssueRows(data.damageIssues, 'dmg-tbody');
+
+    // 처리기간분석
+    const ps = data.processStats;
+    document.getElementById('process-title').textContent = `처리기간 분석 (${ps.period}) — 총 ${ps.total}건`;
+    document.getElementById('process-stat-cards').innerHTML = ps.stats.map(s => `
+      <div class="stat-card">
+        <div class="stat-title">${s.상태}</div>
+        <div class="stat-row"><span class="key">건수</span><span class="val">${s.건수}</span></div>
+        <div class="stat-row"><span class="key">평균 D+</span><span class="val">${s.평균}</span></div>
+        <div class="stat-row"><span class="key">최소 D+</span><span class="val">${s.최소}</span></div>
+        <div class="stat-row"><span class="key">최대 D+</span><span class="val">${s.최대}</span></div>
+      </div>`).join('');
+    document.getElementById('process-tbody').innerHTML = ps.stats.map(s =>
+      `<tr><td>${statusBadge(s.상태)}</td><td>${s.건수}</td><td>${s.평균}</td><td>${s.최소}</td><td>${s.최대}</td></tr>`
+    ).join('') + `<tr style="font-weight:600"><td>합계</td><td>${ps.total}</td><td colspan="3"></td></tr>`;
+
+    // 이슈생성자추적
+    const ct = data.cancelTracking;
+    const cancelEl = document.getElementById('cancel-content');
+    if (!ct.hasReporter) {
+      cancelEl.innerHTML = `<div class="notice">Reporter 파일 없음 — 이슈생성자 정보를 보려면 배치 실행 시 Reporter 파일을 함께 선택해주세요.</div>`;
+    } else {
+      cancelEl.innerHTML = `
+        <div class="table-wrap">
+          <div class="table-header">
+            <h2>이슈생성자 취소건 집계 (${ct.period}) — 총 ${ct.total}건</h2>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>순위</th><th>이슈생성자</th><th>구분</th><th>취소건수</th></tr></thead>
+              <tbody>${ct.summary.map((r, i) =>
+                `<tr><td>${i+1}</td><td>${r.이슈생성자}</td><td>${r.구분 === '반장' ? '<span class="badge badge-gen">반장</span>' : r.구분}</td><td>${r.취소건수}</td></tr>`
+              ).join('')}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    // TOP LOC
+    const tl = data.topLoc;
+    document.getElementById('loc-title').textContent = `TOP LOC 20 (${tl.period}) — 대상 ${tl.total}건`;
+    const maxCnt = tl.rows.length ? tl.rows[0].건수 : 1;
+    document.getElementById('loc-bars').innerHTML = tl.rows.map(r => `
+      <div class="bar-item">
+        <div class="loc" title="${r.로케이션}">${r.로케이션}</div>
+        <div class="bar" style="width:${Math.round(r.건수 / maxCnt * 280)}px"></div>
+        <div class="cnt">${r.건수}건</div>
+      </div>`).join('');
+    document.getElementById('loc-tbody').innerHTML = tl.rows.map(r =>
+      `<tr><td>${r.순위}</td><td>${r.로케이션}</td><td>${r.건수}</td><td style="white-space:normal">${r.SKU목록}</td></tr>`
+    ).join('');
+  })
+  .catch(e => {
+    document.querySelector('.content').innerHTML =
+      `<div class="notice" style="border-color:#e53e3e;background:#fff5f5;color:#c53030;margin-top:20px">
+        데이터 로딩 실패: ${e.message}<br><br>
+        배치 파일을 실행하여 데이터를 먼저 생성해주세요.
+      </div>`;
+  });
+</script>
+</body>
+</html>
