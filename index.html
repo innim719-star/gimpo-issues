@@ -222,6 +222,20 @@
       margin-top: 20px;
       line-height: 1.8;
     }
+    .def-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #94a3b8;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 12px;
+      color: #475569;
+      margin-bottom: 16px;
+      line-height: 1.9;
+    }
+    .def-box .def-title { font-weight: 700; color: #1e293b; margin-bottom: 6px; font-size: 13px; }
+    .def-box ul { padding-left: 18px; margin: 0; }
+    .def-box li { margin-bottom: 2px; }
   </style>
 </head>
 <body>
@@ -586,7 +600,7 @@ fetch('data.json?' + Date.now())
       cel.innerHTML = `
         <div class="table-box" style="margin-bottom:16px">
           <div class="table-box-header">
-            <div><span class="t-title">이슈생성자 취소건 집계</span><span class="t-count">${ct.period} · 총 ${ct.total}건</span></div>
+            <div><span class="t-title">이슈생성 취소건 집계</span><span class="t-count">${ct.period} · 총 ${ct.total}건</span></div>
           </div>
           <div style="overflow-x:auto">
             <table>
@@ -598,6 +612,15 @@ fetch('data.json?' + Date.now())
               </tr>`).join('')}</tbody>
             </table>
           </div>
+        </div>
+        <div class="def-box">
+          <div class="def-title">이슈생성 취소건 집계란?</div>
+          <ul>
+            <li>조회 기간(최근 28일) 동안 분실이슈를 생성한 뒤 <b>이슈취소</b> 상태로 종결한 건수를 이슈생성자별로 집계합니다.</li>
+            <li>취소 건수가 많을수록 불필요하게 생성된 이슈가 많음을 의미하며, <b>이슈 생성 품질 개선 지표</b>로 활용합니다.</li>
+            <li><b>구분</b> — 반장: 이선영·차정민·이대혁·이충환 / 나머지는 일반작업자로 분류됩니다.</li>
+            <li><b>D+</b> — 이슈 생성일시부터 취소(완료)일시까지의 경과 일수입니다.</li>
+          </ul>
         </div>
         <div class="table-box">
           <div class="table-box-header">
